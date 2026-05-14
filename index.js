@@ -73,6 +73,33 @@ async function run() {
       const result = await artifactsCollection.findOne(query);
       res.send(result);
     });
+    app.patch("/artifacts/like-toggle/:id", async (req, res) => {
+  const id = req.params.id;
+  const { email } = req.body;
+
+  const artifact = await artifactsCollection.findOne({
+    _id: new ObjectId(id),
+  });
+
+  const alreadyLiked = artifact?.likedBy?.includes(email);
+
+  const updateDoc = alreadyLiked
+    ? {
+        $inc: { likeCount: -1 },
+        $pull: { likedBy: email },
+      }
+    : {
+        $inc: { likeCount: 1 },
+        $addToSet: { likedBy: email },
+      };
+
+  const result = await artifactsCollection.updateOne(
+    { _id: new ObjectId(id) },
+    updateDoc
+  );
+
+  res.send(result);
+});
 
     // add artifact
     app.post("/artifacts", async (req, res) => {
